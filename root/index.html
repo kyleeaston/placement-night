@@ -45,7 +45,7 @@
 </head>
 <body>
     <div class="quiz-container">
-        <h2 id="question">What is 2 + 2?</h2>
+        <h2 id="question">There are car keys by the bike rack</h2>
         <input type="text" id="answer" placeholder="Type your answer...">
         <button onclick="checkAnswer()">Submit</button>
         <p class="message" id="message"></p>
@@ -53,9 +53,12 @@
 
     <script>
         const questions = [
-            { question: "What is 2 + 2?", answer: "4" },
-            { question: "What is the capital of France?", answer: "Paris" },
-            { question: "What is the square root of 9?", answer: "3" }
+            { question: "There are car keys by the bike rack", answer: "swag" },
+            { question: "Go to WHATABURGER and while you order, say SIGMA, DIDDY, and FREAKBOB. Video it and send to 571-428-5041 for the answer", answer: "Deez Nuts" },
+            { question: "Go to target on Texas Ave and go to the curbside pickup spots. What was in the order?", answer: "Baby Oil" },
+            { question: "Go to the CLOAKED MAN. At First Down park (near Lakewalk/POV)", answer: "Ohio" },
+            { question: "30.620233, -96.373324", answer: "nsldfnsljdfn" }
+
         ];
         let currentQuestionIndex = 0;
 
