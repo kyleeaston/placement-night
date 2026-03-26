@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -89,5 +89,463 @@
             }
         }
     </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #39ff14;
+            --hot-pink: #ff006e;
+            --electric-blue: #00f5ff;
+            --cursed-yellow: #ffff00;
+            --void: #0a0a0a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Comic Neue', 'Comic Sans MS', cursive;
+            background: var(--void);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Scrolling background text */
+        .bg-text {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.07;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-content: flex-start;
+            padding: 10px;
+            animation: bgScroll 20s linear infinite;
+        }
+        .bg-text span {
+            color: var(--neon-green);
+            font-size: 13px;
+            font-family: 'Comic Neue', cursive;
+            white-space: nowrap;
+        }
+
+        @keyframes bgScroll {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+
+        .quiz-container {
+            position: relative;
+            z-index: 10;
+            background: #111;
+            border: 4px solid var(--neon-green);
+            box-shadow:
+                0 0 20px var(--neon-green),
+                0 0 60px rgba(57,255,20,0.3),
+                inset 0 0 30px rgba(57,255,20,0.05);
+            padding: 36px 28px 28px;
+            border-radius: 12px;
+            max-width: 440px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .quiz-title {
+            font-size: 11px;
+            letter-spacing: 4px;
+            color: var(--electric-blue);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            text-shadow: 0 0 8px var(--electric-blue);
+        }
+
+        #question {
+            font-size: 20px;
+            color: var(--cursed-yellow);
+            text-shadow: 3px 3px 0 var(--hot-pink), 0 0 20px rgba(255,255,0,0.4);
+            line-height: 1.4;
+            margin-bottom: 24px;
+            min-height: 60px;
+        }
+
+        #answer {
+            width: 100%;
+            padding: 12px 16px;
+            background: #1a1a1a;
+            border: 2px solid var(--electric-blue);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Comic Neue', cursive;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #answer:focus {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 12px rgba(57,255,20,0.5);
+        }
+
+        button {
+            padding: 12px 32px;
+            background: var(--hot-pink);
+            color: white;
+            font-family: 'Comic Neue', cursive;
+            font-size: 18px;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-shadow: 2px 2px 0 #000;
+            box-shadow: 4px 4px 0 #000, 0 0 20px rgba(255,0,110,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            letter-spacing: 1px;
+        }
+        button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #000, 0 0 30px rgba(255,0,110,0.6);
+        }
+        button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 #000;
+        }
+
+        .message {
+            margin-top: 14px;
+            font-size: 22px;
+            font-weight: 700;
+            min-height: 30px;
+            letter-spacing: 1px;
+        }
+        .message.correct { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+        .message.wrong { color: var(--hot-pink); text-shadow: 0 0 10px var(--hot-pink); }
+
+        /* ===== TRANSITION OVERLAY ===== */
+        #transition-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            overflow: hidden;
+        }
+        #transition-overlay.active { display: flex; }
+
+        .overlay-bg {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            animation: flashBg 0.1s steps(1) infinite;
+        }
+        @keyframes flashBg {
+            0%   { background: #000; }
+            20%  { background: #1a0033; }
+            40%  { background: #003300; }
+            60%  { background: #330000; }
+            80%  { background: #000033; }
+            100% { background: #000; }
+        }
+
+        .meme-text {
+            position: relative;
+            z-index: 2;
+            font-family: 'Comic Neue', 'Impact', cursive;
+            font-size: clamp(40px, 10vw, 90px);
+            font-weight: 900;
+            text-align: center;
+            animation: memeWobble 0.15s ease-in-out infinite, megaSpin 0.6s ease-in-out;
+            text-transform: uppercase;
+            line-height: 1.1;
+            padding: 0 20px;
+        }
+
+        @keyframes memeWobble {
+            0%   { transform: rotate(-3deg) scale(1.05); }
+            50%  { transform: rotate(3deg) scale(0.95); }
+            100% { transform: rotate(-3deg) scale(1.05); }
+        }
+        @keyframes megaSpin {
+            0%   { transform: rotate(0deg) scale(0); opacity: 0; }
+            50%  { transform: rotate(720deg) scale(1.3); opacity: 1; }
+            100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        }
+
+        .meme-sub {
+            position: relative;
+            z-index: 2;
+            font-family: 'Comic Neue', cursive;
+            font-size: clamp(16px, 4vw, 28px);
+            color: white;
+            text-shadow: 2px 2px 0 #000;
+            animation: subBounce 0.2s ease-in-out infinite alternate;
+            margin-top: 10px;
+        }
+        @keyframes subBounce {
+            0%   { transform: translateY(0) scaleX(1); }
+            100% { transform: translateY(-8px) scaleX(1.05); }
+        }
+
+        /* Floating emojis */
+        .floaty {
+            position: absolute;
+            font-size: 50px;
+            animation: floatyAnim 1.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 3;
+        }
+        @keyframes floatyAnim {
+            0%   { transform: translateY(0) rotate(0deg) scale(0); opacity: 1; }
+            50%  { transform: translateY(-200px) rotate(360deg) scale(1.5); opacity: 1; }
+            100% { transform: translateY(-400px) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+
+        /* Scanlines */
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.3) 2px,
+                rgba(0,0,0,0.3) 4px
+            );
+            z-index: 4;
+        }
+
+        /* Progress dots */
+        .progress {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #555;
+            transition: all 0.3s;
+        }
+        .dot.done {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            box-shadow: 0 0 8px var(--neon-green);
+        }
+        .dot.current {
+            background: var(--electric-blue);
+            border-color: var(--electric-blue);
+            box-shadow: 0 0 8px var(--electric-blue);
+            animation: dotPulse 0.8s ease-in-out infinite;
+        }
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+        }
+
+        /* Shake animation for wrong answers */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px) rotate(-1deg); }
+            40% { transform: translateX(8px) rotate(1deg); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        /* Win screen */
+        .win-screen {
+            color: var(--cursed-yellow);
+            font-size: 28px;
+            text-shadow: 3px 3px 0 var(--hot-pink);
+            animation: winPulse 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes winPulse {
+            0%   { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Scrolling background brainrot -->
+<div class="bg-text" id="bgText"></div>
+
+<!-- Main quiz -->
+<div class="quiz-container" id="quizBox">
+    <div class="quiz-title">🔥 SIGMA QUIZ 🔥</div>
+    <div class="progress" id="progress"></div>
+    <h2 id="question"></h2>
+    <input type="text" id="answer" placeholder="Type your answer..." autocomplete="off">
+    <button onclick="checkAnswer()">SUBMIT FR FR</button>
+    <p class="message" id="message"></p>
+</div>
+
+<!-- Transition overlay -->
+<div id="transition-overlay">
+    <div class="overlay-bg"></div>
+    <div class="scanlines"></div>
+    <div class="meme-text" id="memeText"></div>
+    <div class="meme-sub" id="memeSub"></div>
+</div>
+
+<script>
+    const questions = [
+        { question: "There are car keys by the bike rack", answer: "swag" },
+        { question: "Fill out this google form: https://forms.gle/U3oF6xSMFX4ek5ss7", answer: "rizz" },
+        { question: "Recreate this video and sent to (832) 405-4637 https://www.tiktok.com/@shonti2funny/video/7500753772100979999", answer: "Deez Nuts" },
+        { question: "Take a picture at the war hymn monument, send to (832) 405-4637", answer: "baby oil" },
+        { question: "30°36'05.2\"N 96°22'57.7\"W\nWhere did the MAN tell you to go (2 words, 6 letters each)", answer: "Equine Center" },
+        { question: "What did the car say?", answer: "John Pork" },
+        { question: "30°37'12.5\"N 96°22'24.1\"W", answer: "sdfsorkghfoiusgfhdiufghilu" },
+
+    ];
+
+    const transitions = [
+        { text: "YAPPING UNLOCKED 🗣️", sub: "no cap on god fr fr bussin", color1: "#ff006e", color2: "#ffff00" },
+        { text: "SIGMA GRINDSET 💀", sub: "skibidi ohio rizz activated", color1: "#39ff14", color2: "#00f5ff" },
+        { text: "W RIZZ DETECTED 🔥", sub: "chat is this real??", color1: "#ff6600", color2: "#ff006e" },
+        { text: "BASED 🐸", sub: "you're built different ngl", color1: "#00f5ff", color2: "#39ff14" },
+        { text: "NO CAP ❗❗❗", sub: "the rizzler has logged on", color1: "#ffff00", color2: "#ff6600" },
+        { text: "IT'S GIVING 💅", sub: "main character energy ACTIVATED", color1: "#ff006e", color2: "#00f5ff" },
+    ];
+
+    const floatyEmojis = ["💀","🔥","🗣️","❗","💅","🐸","🤡","😭","👽","🫡","🥶","💯","🤙","🗿"];
+
+    const brainrotWords = ["sigma","ohio","rizz","skibidi","bussin","fr fr","no cap","sheesh","slay","based","rizzler","fanum","gyatt","mewing","grimace","delulu","rent free","understood the assignment","it's giving","era","ate","period","understood","vibes","lowkey","highkey","slaps","hits different","understood the assignment","caught in 4k","understood","ratio","W","L","mid","goated","yapping","understood the assignment","brainrot","understood","unalived","understood","cooked","understood","understood","understood"];
+
+    let currentQuestionIndex = 0;
+
+    // Fill background
+    const bgText = document.getElementById('bgText');
+    let bgContent = '';
+    for (let i = 0; i < 300; i++) {
+        bgContent += `<span>${brainrotWords[i % brainrotWords.length]}</span>`;
+    }
+    bgText.innerHTML = bgContent;
+
+    function buildProgress() {
+        const prog = document.getElementById('progress');
+        prog.innerHTML = '';
+        questions.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i < currentQuestionIndex ? ' done' : i === currentQuestionIndex ? ' current' : '');
+            prog.appendChild(dot);
+        });
+    }
+
+    function loadQuestion() {
+        document.getElementById('question').textContent = questions[currentQuestionIndex].question;
+        document.getElementById('answer').value = '';
+        document.getElementById('message').textContent = '';
+        document.getElementById('message').className = 'message';
+        buildProgress();
+    }
+
+    function checkAnswer() {
+        const userAnswer = document.getElementById("answer").value.trim().toLowerCase();
+        const correctAnswer = questions[currentQuestionIndex].answer.toLowerCase();
+        const messageEl = document.getElementById("message");
+        const quizBox = document.getElementById("quizBox");
+        console.log('checking answer called');
+        if (userAnswer === correctAnswer) {
+            messageEl.className = 'message correct';
+            messageEl.textContent = "✅ CORRECT BESTIE!!";
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    playTransition();
+                } else {
+                    showWin();
+                }
+            }, 600);
+        } else {
+            messageEl.className = 'message wrong';
+            messageEl.textContent = "❌ RATIO'D. TRY AGAIN.";
+            quizBox.classList.remove('shake');
+            void quizBox.offsetWidth;
+            quizBox.classList.add('shake');
+        }
+    }
+
+    function playTransition() {
+        const overlay = document.getElementById('transition-overlay');
+        const t = transitions[(currentQuestionIndex - 1) % transitions.length];
+
+        const memeText = document.getElementById('memeText');
+        const memeSub = document.getElementById('memeSub');
+
+        memeText.textContent = t.text;
+        memeText.style.color = t.color1;
+        memeText.style.textShadow = `5px 5px 0 ${t.color2}, 0 0 30px ${t.color1}, 10px 10px 0 #000`;
+
+        memeSub.textContent = t.sub;
+        memeSub.style.color = t.color2;
+        memeSub.style.textShadow = `2px 2px 0 #000, 0 0 15px ${t.color2}`;
+
+        overlay.classList.add('active');
+
+        // Spawn floaty emojis
+        for (let i = 0; i < 12; i++) {
+            setTimeout(() => spawnFloaty(overlay), i * 80);
+        }
+
+        setTimeout(() => {
+            overlay.classList.remove('active');
+            // Remove floaties
+            overlay.querySelectorAll('.floaty').forEach(f => f.remove());
+            loadQuestion();
+        }, 5000);
+    }
+
+    function spawnFloaty(parent) {
+        const el = document.createElement('div');
+        el.className = 'floaty';
+        el.textContent = floatyEmojis[Math.floor(Math.random() * floatyEmojis.length)];
+        el.style.left = Math.random() * 90 + 5 + 'vw';
+        el.style.top = Math.random() * 60 + 20 + 'vh';
+        el.style.animationDuration = (0.8 + Math.random() * 0.7) + 's';
+        el.style.fontSize = (30 + Math.random() * 50) + 'px';
+        parent.appendChild(el);
+        setTimeout(() => el.remove(), 2000);
+    }
+
+    function showWin() {
+        document.getElementById('quizBox').innerHTML = `
+            <div class="win-screen">
+                🏆 YOU ATE THAT 🏆<br>
+                <span style="font-size:50px">🔥💅🔥</span><br>
+                <span style="font-size:18px;color:var(--electric-blue)">no cap on god you're the ultimate sigma</span>
+            </div>`;
+    }
+
+    // Enter key support
+    // document.addEventListener('keydown', e => {
+    //     if (e.key === 'Enter') checkAnswer();
+    // });
+
+    // Init
+    loadQuestion();
+</script>
 </body>
 </html>
